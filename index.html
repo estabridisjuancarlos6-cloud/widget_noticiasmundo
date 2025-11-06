@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticia Widget Dinámico</title>
+    <style>
+        @font-face {
+            font-family: 'BlissLight';
+            src: url('font/BlissLight Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --bg-color: #f7f7f7;
+            --title-color: #373359;
+            --line-color: #373359;
+            --summary-text-color: #5d5d5d;
+            --border-radius: 20px;
+            --card-padding: 2vw;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'BlissLight', sans-serif;
+        }
+
+        .card-widget {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1%;
+        }
+
+        .card-content {
+            border-radius: var(--border-radius);
+            width: 100%;
+            height: 100%;
+            padding: var(--card-padding);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-header h1 {
+            color: var(--title-color);
+            font-size: clamp(1.2rem, 2vw, 2rem);
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .header-line {
+            border: none;
+            height: 2px;
+            background-color: var(--line-color);
+            margin-top: 5px;
+            margin-bottom: 4vh;
+            width: 100%;
+        }
+
+        .news-carousel-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .card-body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            gap: 4%;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            pointer-events: none;
+        }
+
+        .card-body.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .image-container {
+            flex-shrink: 0;
+            width: 35%;
+            max-width: 300px;
+            aspect-ratio: 1 / 1;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            display: block;
+        }
+
+        .text-content {
+            flex: 1;
+            color: var(--summary-text-color);
+        }
+
+        .text-content .title {
+            color: var(--title-color);
+            font-size: clamp(20px, 2.5vw, 32px);
+            font-weight: bold;
+            margin: 0 0 1vh 0;
+        }
+
+        .text-content .summary {
+            color: #2d295b;
+            font-size: clamp(16px, 1.6vw, 22px);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+        }
+
+        .dot {
+            height: 0.6vw;
+            width: 0.6vw;
+            min-width: 6px;
+            min-height: 6px;
+            background-color: #ccc;
+            border-radius: 50%;
+            margin: 0 4px;
+            transition: background-color 0.3s;
+        }
+
+        .dot.active {
+            background-color: var(--line-color);
+        }
+
+        /* ======== RESPONSIVE ======== */
+        @media (max-width: 800px) {
+            .card-body {
+                flex-direction: column;
+                align-items: center;
+                gap: 2vh;
+            }
+
+            .image-container {
+                width: 65%;
+                max-width: 250px;
+            }
+
+            .text-content {
+                text-align: left;
+            }
+        }
+
+        /* ======== ALTURA MUY BAJA ======== */
+        @media (max-height: 350px) {
+            .card-body {
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 3%;
+            }
+
+            .image-container {
+                width: 25%;
+                max-width: 150px;
+            }
+
+            .text-content .title {
+                font-size: clamp(14px, 1.4vw, 18px);
+                margin-bottom: 0.5vh;
+            }
+
+            .text-content .summary {
+                font-size: clamp(12px, 1.3vw, 16px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card-widget">
+        <div class="card-content">
+
+            <div class="card-header">
+                <h1>Noticias Mundo</h1>
+                <hr class="header-line">
+            </div>
+
+            <div id="news-carousel-container" class="news-carousel-container">
+            </div>
+
+            <div id="pagination" class="pagination">
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // URL de la API de noticias
+        const API_URL = "https://rss.app/feeds/v1.1/8wABFSYO35zvhRrY.json";
+        // Intervalo de tiempo para cambiar de noticia (15 segundos)
+        const INTERVAL_MS = 15000;
+
+        // Variables globales
+        let newsItems = [];
+        let currentNewsIndex = 0;
+        let carouselInterval;
+
+        // Referencias del DOM
+        const carouselContainer = document.getElementById('news-carousel-container');
+        const paginationContainer = document.getElementById('pagination');
+
+        /**
+         * Función para cargar los datos de la API.
+         */
+        async function fetchNews() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                // Guardamos los items de las noticias
+                newsItems = data.items;
+
+                if (newsItems.length > 0) {
+                    renderCarousel();
+                    startCarousel();
+                } else {
+                    carouselContainer.innerHTML = '<p style="text-align: center; color: red;">No hay noticias disponibles.</p>';
+                }
+
+            } catch (error) {
+                console.error("Error al obtener las noticias:", error);
+                carouselContainer.innerHTML = '<p style="text-align: center; color: red;">Error al cargar las noticias. Verifique la conexión.</p>';
+            }
+        }
+
+        /**
+         * Función para renderizar el carrusel y los puntos de paginación.
+         */
+        function renderCarousel() {
+            carouselContainer.innerHTML = '';
+            paginationContainer.innerHTML = '';
+
+            newsItems.forEach((item, index) => {
+                // 1. Crear el elemento de la Noticia
+                const newsCard = createNewsCard(item, index);
+                carouselContainer.appendChild(newsCard);
+
+                // 2. Crear el Punto de Paginación
+                const dot = createPaginationDot(index);
+                paginationContainer.appendChild(dot);
+            });
+
+            // Muestra la primera noticia y activa el primer punto
+            updateDisplay(0);
+        }
+
+        /**
+         * Crea el elemento HTML para una sola noticia.
+         */
+        function createNewsCard(item, index) {
+            // Usamos el campo 'image' que contiene la URL de la imagen principal.
+            const imageUrl = item.image || 'placeholder.png'; // Fallback por si no hay imagen
+
+            // Usamos el campo 'content_text' como resumen si existe, sino usamos 'title'.
+            const summary = item.content_text || item.title;
+
+            const cardHtml = `
+        <div class="image-container">
+            <img src="${imageUrl}" alt="${item.title}">
+        </div>
+        <div class="text-content">
+            <h2 class="title">${item.title}</h2>
+            <p class="summary">${summary}</p>
+        </div>
+    `;
+
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            // Asignamos un data-index para fácil referencia
+            cardBody.dataset.index = index;
+            cardBody.innerHTML = cardHtml;
+
+            return cardBody;
+        }
+
+        /**
+         * Crea el elemento HTML para un punto de paginación.
+         */
+        function createPaginationDot(index) {
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            dot.dataset.index = index;
+            // Opcional: permitir navegación manual al hacer clic en el punto
+            dot.addEventListener('click', () => {
+                clearInterval(carouselInterval); // Detiene el auto-carrusel
+                updateDisplay(index);
+                startCarousel(); // Reinicia el auto-carrusel
+            });
+            return dot;
+        }
+
+        /**
+         * Actualiza la noticia y el punto visible.
+         */
+        function updateDisplay(newIndex) {
+            // Garantiza que el índice esté dentro del rango
+            currentNewsIndex = newIndex % newsItems.length;
+
+            // 1. Actualizar las Tarjetas de Noticia
+            const allNewsCards = carouselContainer.querySelectorAll('.card-body');
+            allNewsCards.forEach((card, index) => {
+                // Si el índice coincide con el actual, añádele la clase 'active', si no, remuévela.
+                card.classList.toggle('active', index === currentNewsIndex);
+            });
+
+            // 2. Actualizar los Puntos de Paginación
+            const allDots = paginationContainer.querySelectorAll('.dot');
+            allDots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentNewsIndex);
+            });
+        }
+
+        /**
+         * Inicia el carrusel automático con el intervalo de 15 segundos.
+         */
+        function startCarousel() {
+            // Limpia cualquier intervalo existente para evitar duplicados
+            clearInterval(carouselInterval);
+
+            carouselInterval = setInterval(() => {
+                // Calcula el índice de la siguiente noticia
+                const nextIndex = (currentNewsIndex + 1) % newsItems.length;
+                updateDisplay(nextIndex);
+            }, INTERVAL_MS); // Cambia cada 15 segundos
+        }
+
+
+        // Inicia la aplicación al cargar la página
+        document.addEventListener('DOMContentLoaded', fetchNews);
+    </script>
+</body>
+
+</html>
