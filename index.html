@@ -13,6 +13,13 @@
             font-style: normal;
         }
 
+         @font-face {
+            font-family: 'BlissHeavy';
+            src: url('font/blisspro_heavy.otf') format('opentype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
         :root {
             --bg-color: #f7f7f7;
             --title-color: #373359;
@@ -60,6 +67,7 @@
             font-size: clamp(1.2rem, 2vw, 2rem);
             font-weight: bold;
             margin: 0;
+            font-family: 'BlissHeavy', Arial, sans-serif;
         }
 
         .header-line {
@@ -124,6 +132,7 @@
             font-size: clamp(20px, 2.5vw, 32px);
             font-weight: bold;
             margin: 0 0 1vh 0;
+            font-family: 'BlissHeavy', Arial, sans-serif;
         }
 
         .text-content .summary {
@@ -154,7 +163,7 @@
         }
 
         /* ======== RESPONSIVE ======== */
-        @media (max-width: 600px) {
+        @media (max-width: 800px) {
             .card-body {
                 flex-direction: column;
                 align-items: center;
@@ -366,5 +375,3 @@
 
 
 </html>
-
-
