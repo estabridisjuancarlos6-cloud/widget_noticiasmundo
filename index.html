@@ -3,6 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src
+          'self'
+          'sha256-6DsmMKohzOafv4MRwMTLb2ckEdTY6oKxmM1UF07/0lY=';
+        style-src
+          'self'
+          'unsafe-inline'
+          https://fonts.googleapis.com;
+        img-src
+          'self'
+          https://images.weserv.nl
+          data:;
+        connect-src
+          https://rss.app;
+        font-src
+          'self'
+          https://fonts.gstatic.com;
+        object-src 'none';
+        frame-src 'none';
+        base-uri 'self';
+      ">
     <title>Noticias Mundo</title>
 
     <style>
@@ -280,6 +303,3 @@
 
 </body>
 </html>
-
-
-
