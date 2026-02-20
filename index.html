@@ -1,31 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        script-src
-          'self'
-          'sha256-6DsmMKohzOafv4MRwMTLb2ckEdTY6oKxmM1UF07/0lY=';
-        style-src
-          'self'
-          'unsafe-inline'
-          https://fonts.googleapis.com;
-        img-src
-          'self'
-          https://images.weserv.nl
-          data:;
-        connect-src
-          https://rss.app;
-        font-src
-          'self'
-          https://fonts.gstatic.com;
-        object-src 'none';
-        frame-src 'none';
-        base-uri 'self';
-      ">
+    <meta http-equiv="Content-Security-Policy" content="
+default-src 'self';
+script-src 'self';
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+img-src 'self' https://images.weserv.nl data:;
+connect-src https://rss.app;
+font-src 'self' https://fonts.gstatic.com;
+object-src 'none';
+frame-src 'none';
+base-uri 'self';
+">
     <title>Noticias Mundo</title>
 
     <style>
@@ -48,7 +37,8 @@
             --side-padding: 5%;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -197,109 +187,22 @@
 
 <body>
 
-<div class="card-widget">
-    <div class="card-content">
+    <div class="card-widget">
+        <div class="card-content">
 
-        <div class="card-header">
-            <h1>Noticias Mundo</h1>
-            <hr class="header-line">
-        </div>
-
-        <div id="news-carousel-container" class="news-carousel-container"></div>
-        <div id="pagination" class="pagination"></div>
-
-    </div>
-</div>
-
-<script>
-    const API_URL = "https://rss.app/feeds/v1.1/oZiRf4qVg2rtunGW.json";
-    const INTERVAL_MS = 15000;
-
-    let newsItems = [];
-    let currentNewsIndex = 0;
-    let carouselInterval;
-
-    const carouselContainer = document.getElementById("news-carousel-container");
-    const paginationContainer = document.getElementById("pagination");
-
-    async function fetchNews() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            newsItems = data.items || [];
-
-            if (newsItems.length) {
-                renderCarousel();
-                startCarousel();
-            }
-        } catch {
-            carouselContainer.innerHTML = "<p>Error al cargar noticias</p>";
-        }
-    }
-
-    function renderCarousel() {
-        carouselContainer.innerHTML = "";
-        paginationContainer.innerHTML = "";
-
-        newsItems.forEach((item, index) => {
-            carouselContainer.appendChild(createNewsCard(item, index));
-            paginationContainer.appendChild(createDot(index));
-        });
-
-        updateDisplay(0);
-    }
-
-    function createNewsCard(item, index) {
-        const card = document.createElement("div");
-        card.className = "card-body";
-        card.dataset.index = index;
-
-        card.innerHTML = `
-            <div class="news-row">
-                <div class="image-container">
-                    <img src="${item.image || 'placeholder.png'}" alt="">
-                </div>
-                <div class="text-content">
-                    <div class="news-title">${item.title}</div>
-                    <div class="summary">
-                        ${item.content_text || item.title}
-                    </div>
-                </div>
+            <div class="card-header">
+                <h1>Noticias Mundo</h1>
+                <hr class="header-line">
             </div>
-        `;
-        return card;
-    }
 
-    function createDot(index) {
-        const dot = document.createElement("span");
-        dot.className = "dot";
-        dot.onclick = () => {
-            clearInterval(carouselInterval);
-            updateDisplay(index);
-            startCarousel();
-        };
-        return dot;
-    }
+            <div id="news-carousel-container" class="news-carousel-container"></div>
+            <div id="pagination" class="pagination"></div>
 
-    function updateDisplay(index) {
-        currentNewsIndex = index;
-        document.querySelectorAll(".card-body").forEach((c, i) =>
-            c.classList.toggle("active", i === index)
-        );
-        document.querySelectorAll(".dot").forEach((d, i) =>
-            d.classList.toggle("active", i === index)
-        );
-    }
+        </div>
+    </div>
 
-    function startCarousel() {
-        clearInterval(carouselInterval);
-        carouselInterval = setInterval(() => {
-            updateDisplay((currentNewsIndex + 1) % newsItems.length);
-        }, INTERVAL_MS);
-    }
-
-    document.addEventListener("DOMContentLoaded", fetchNews);
-</script>
+    <script src="script.js"></script>
 
 </body>
+
 </html>
