@@ -40,19 +40,26 @@ function createNewsCard(item, index) {
     card.className = "card-body";
     card.dataset.index = index;
 
+    const imgSrc = item.image || "";
+
+    const proxiedImage = imgSrc
+        ? `https://images.weserv.nl/?url=${encodeURIComponent(imgSrc)}`
+        : "placeholder.png";
+
     card.innerHTML = `
-            <div class="news-row">
-                <div class="image-container">
-                    <img src="${item.image || 'placeholder.png'}" alt="">
-                </div>
-                <div class="text-content">
-                    <div class="news-title">${item.title}</div>
-                    <div class="summary">
-                        ${item.content_text || item.title}
-                    </div>
+        <div class="news-row">
+            <div class="image-container">
+                <img src="${proxiedImage}" alt="">
+            </div>
+            <div class="text-content">
+                <div class="news-title">${item.title}</div>
+                <div class="summary">
+                    ${item.content_text || item.title}
                 </div>
             </div>
-        `;
+        </div>
+    `;
+
     return card;
 }
 
